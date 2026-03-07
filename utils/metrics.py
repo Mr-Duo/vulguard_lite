@@ -21,9 +21,17 @@ def eval_metrics(result_df, model, columns):
     prc = precision_score(y_true=y_test, y_pred=pred)
     rc = recall_score(y_true=y_test, y_pred=pred)
     mcc = matthews_corrcoef(y_true=y_test, y_pred=pred)
+    
+    marked_vuln = len([commit for i, commit in enumerate(pred) if y_test[i] == 1 and commit == 1])
+    vuln = len([commit for commit in y_test if commit == 1])
+    marked = len([commit for commit in pred if commit == 1])
+    all_commit = len(y_test)
+    
+    vuln_detection_ratio = marked_vuln / vuln
+    marked_function_ratio = marked / all_commit
 
     if "LOC" not in result_df.columns:
-        metric_df = pd.DataFrame([[roc_auc, pr_auc, acc, f1, prc, rc, mcc]], 
+        metric_df = pd.DataFrame([[roc_auc, pr_auc, acc, f1, prc, rc, mcc, vuln_detection_ratio, marked_function_ratio]], 
                              columns=columns, index=[model])
         return metric_df
 
@@ -74,13 +82,6 @@ def eval_metrics(result_df, model, columns):
                  (auc(percent_effort_list, actual_recall_at_percent_effort_list) -
                   auc(percent_effort_list, actual_worst_recall_at_percent_effort_list)))
     
-    marked_vuln = len([commit for i, commit in enumerate(pred) if y_test[i] == 1 and commit == 1])
-    vuln = len([commit for commit in y_test if commit == 1])
-    marked = len([commit for commit in pred if commit == 1])
-    all_commit = len(y_test)
-    
-    vuln_detection_ratio = marked_vuln / vuln
-    marked_function_ratio = marked / all_commit
     metric_df = pd.DataFrame(
         [[
             roc_auc, pr_auc, acc, f1, prc, rc, mcc, effort_at_20_percent_LOC_recall, recall_20_percent_effort, p_opt, vuln_detection_ratio, marked_function_ratio
